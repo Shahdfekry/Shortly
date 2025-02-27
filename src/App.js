@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { useLocalStorageState } from "./useLocalStorageState";
-import axios from "axios";
 
 function App() {
   const [link, setLink] = useState("");
@@ -21,52 +20,10 @@ function App() {
     }
   }
 
-  // async function handleShortenLink() {
-  //   try {
-  //     const apiKey = "19645a6f133240f8ac0639c854a832f2";
-
-  //     if (!link) {
-  //       throw new Error("Please add a link");
-  //     }
-
-  //     if (!/^https?:\/\/[^\s]+$/.test(link)) {
-  //       throw new Error("Invalid URL");
-  //     }
-  //     setError("");
-  //     const response = await fetch("https://api.rebrandly.com/v1/links", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         apikey: apiKey,
-  //       },
-  //       body: JSON.stringify({
-  //         destination: link,
-  //       }),
-  //     });
-  //     if (response.status === 429 || response.status === 403) {
-  //       throw new Error(
-  //         "You have reached the max number of URLs, please try again next month"
-  //       );
-  //     }
-  //     if (!response.ok) {
-  //       throw new Error("Failed to shorten the URL");
-  //     }
-  //     const data = await response.json();
-  //     console.log(data);
-
-  //     const newLink = {
-  //       original: link,
-  //       shortened: data.shortUrl,
-  //     };
-  //     setShortenedLinks([...shortenedLinks, newLink]);
-  //     setLink("");
-  //   } catch (error) {
-  //     setError(error.message);
-  //   }
-  // }
-
   async function handleShortenLink() {
     try {
+      const apiKey = "19645a6f133240f8ac0639c854a832f2";
+
       if (!link) {
         throw new Error("Please add a link");
       }
@@ -74,27 +31,36 @@ function App() {
       if (!/^https?:\/\/[^\s]+$/.test(link)) {
         throw new Error("Invalid URL");
       }
-      let encodedLink = encodeURIComponent(link);
-
-      setError(""); // Clear previous errors
-
-      // Make API request with Axios
-      const response = await axios.post("https://cleanuri.com/api/v1/shorten", {
-        url: encodedLink, // CleanURI requires 'url' key
+      setError("");
+      const response = await fetch("https://api.rebrandly.com/v1/links", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: apiKey,
+        },
+        body: JSON.stringify({
+          destination: link,
+        }),
       });
+      if (response.status === 429 || response.status === 403) {
+        throw new Error(
+          "You have reached the max number of URLs, please try again next month"
+        );
+      }
+      if (!response.ok) {
+        throw new Error("Failed to shorten the URL");
+      }
+      const data = await response.json();
+      console.log(data);
 
-      console.log(response.data); // Log API response
-
-      // Store the shortened URL
       const newLink = {
         original: link,
-        shortened: response.data.result_url, // CleanURI returns 'result_url'
+        shortened: data.shortUrl,
       };
-
       setShortenedLinks([...shortenedLinks, newLink]);
-      setLink(""); // Clear input field
+      setLink("");
     } catch (error) {
-      setError(error.response?.data?.error || error.message);
+      setError(error.message);
     }
   }
 
